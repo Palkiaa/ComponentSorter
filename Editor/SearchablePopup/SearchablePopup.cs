@@ -1,26 +1,26 @@
-﻿// ---------------------------------------------------------------------------- 
+﻿// ----------------------------------------------------------------------------
 // Author: Ryan Hipple
 // Date:   05/01/2018
 // ----------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
-
+using CompSorting;
 using UnityEditor;
 
 using UnityEngine;
 
-//https://github.com/roboryantron/UnityEditorJunkie/blob/master/Assets/SearchableEnum/Code/Editor/SearchablePopup.cs
-//https://docs.unity3d.com/Manual/upm-git.html
+//Source: https://github.com/roboryantron/UnityEditorJunkie/blob/master/Assets/SearchableEnum/Code/Editor/SearchablePopup.cs
 namespace RoboRyanTron.SearchableEnum.Editor
 {
     /// <summary>
     /// A popup window that displays a list of options and may use a search
-    /// string to filter the displayed content. 
+    /// string to filter the displayed content.
     /// </summary>
     public class SearchablePopup : PopupWindowContent
     {
         #region -- Constants --------------------------------------------------
+
         /// <summary> Height of each element in the popup list. </summary>
         private const float ROW_HEIGHT = 16.0f;
 
@@ -29,9 +29,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
 
         /// <summary> Name to use for the text field for search. </summary>
         private const string SEARCH_CONTROL_NAME = "EnumSearchText";
-        #endregion -- Constants -----------------------------------------------
+
+        #endregion -- Constants --------------------------------------------------
 
         #region -- Static Functions -------------------------------------------
+
         /// <summary> Show a new SearchablePopup. </summary>
         /// <param name="activatorRect">
         /// Rectangle of the button that triggered the popup.
@@ -67,9 +69,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
             GUI.Box(rect, "", Selection);
             GUI.color = c;
         }
-        #endregion -- Static Functions ----------------------------------------
+
+        #endregion -- Static Functions -------------------------------------------
 
         #region -- Helper Classes ---------------------------------------------
+
         /// <summary>
         /// Stores a list of strings and can return a subset of that list that
         /// matches a given filter string.
@@ -143,9 +147,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
                 return true;
             }
         }
-        #endregion -- Helper Classes ------------------------------------------
+
+        #endregion -- Helper Classes ---------------------------------------------
 
         #region -- Private Variables ------------------------------------------
+
         /// <summary> Callback to trigger when an item is selected. </summary>
         private readonly Action<int> onSelectionMade;
 
@@ -156,7 +162,7 @@ namespace RoboRyanTron.SearchableEnum.Editor
 
         /// <summary>
         /// Container for all available options that does the actual string
-        /// filtering of the content.  
+        /// filtering of the content.
         /// </summary>
         private readonly FilteredList list;
 
@@ -179,9 +185,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
         /// center of the popup.
         /// </summary>
         private float scrollOffset;
-        #endregion -- Private Variables ---------------------------------------
+
+        #endregion -- Private Variables ------------------------------------------
 
         #region -- GUI Styles -------------------------------------------------
+
         // GUIStyles implicitly cast from a string. This triggers a lookup into
         // the current skin which will be the editor skin and lets us get some
         // built-in styles.
@@ -190,9 +198,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
         private static GUIStyle CancelButton = "ToolbarSeachCancelButton";
         private static GUIStyle DisabledCancelButton = "ToolbarSeachCancelButtonEmpty";
         private static GUIStyle Selection = "SelectionRect";
-        #endregion -- GUI Styles ----------------------------------------------
+
+        #endregion -- GUI Styles -------------------------------------------------
 
         #region -- Initialization ---------------------------------------------
+
         private SearchablePopup(string[] names, int currentIndex, Action<int> onSelectionMade)
         {
             list = new FilteredList(names);
@@ -203,9 +213,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
             scrollToIndex = currentIndex;
             scrollOffset = GetWindowSize().y - ROW_HEIGHT * 2;
         }
-        #endregion -- Initialization ------------------------------------------
+
+        #endregion -- Initialization ---------------------------------------------
 
         #region -- PopupWindowContent Overrides -------------------------------
+
         public override void OnOpen()
         {
             base.OnOpen();
@@ -235,9 +247,11 @@ namespace RoboRyanTron.SearchableEnum.Editor
             DrawSearch(searchRect);
             DrawSelectionArea(scrollRect);
         }
-        #endregion -- PopupWindowContent Overrides ----------------------------
+
+        #endregion -- PopupWindowContent Overrides -------------------------------
 
         #region -- GUI --------------------------------------------------------
+
         private void DrawSearch(Rect rect)
         {
             if (Event.current.type == EventType.Repaint)
@@ -324,7 +338,9 @@ namespace RoboRyanTron.SearchableEnum.Editor
             Rect labelRect = new Rect(rowRect);
             labelRect.xMin += ROW_INDENT;
 
-            GUI.Label(labelRect, list.Entries[i].Text);
+            var text = new GUIContent(list.Entries[i].Text);
+            text.image = AssetDatabaseUtil.GetAssetImage(text.text);
+            GUI.Label(labelRect, text);
         }
 
         /// <summary>
@@ -365,6 +381,7 @@ namespace RoboRyanTron.SearchableEnum.Editor
                 }
             }
         }
-        #endregion -- GUI -----------------------------------------------------
+
+        #endregion -- GUI --------------------------------------------------------
     }
 }

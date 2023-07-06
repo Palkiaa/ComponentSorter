@@ -1,14 +1,14 @@
 {
-    "name": "com.spaghetti.component-sorter",
-    "version": "1.1.0",
-    "displayName": "Component Sorter",
-    "description": "Helps keep components sorted to whatever standard you see fit",
-    "unity": "2020.3",
-    "dependencies": {
-        "com.unity.settings-manager": "1.0"
-    },
-    "author": {
-        "name": "Palkiaa",
-        "url": "https://github.com/Palkiaa"
-    }
+  "name": "com.palkiaa.component-sorter",
+  "version": "1.1.0",
+  "displayName": "Component Sorter",
+  "description": "Helps keep components sorted to whatever standard you see fit",
+  "unity": "2020.3",
+  "dependencies": {
+    "com.unity.settings-manager": "2.0.1"
+  },
+  "author": {
+    "name": "Palkiaa",
+    "url": "https://github.com/Palkiaa"
+  }
 }

@@ -1,13 +1,8 @@
 {
-    "name": "CompSorting.Editor",
+    "name": "CompSorting.Core",
     "rootNamespace": "",
-    "references": [
-        "GUID:49818357e697641afb75d2f8acaf1861",
-        "GUID:d50d83d6ae2f5934a882e48c3fd44955"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

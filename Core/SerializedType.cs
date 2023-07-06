@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CompSorting.Editor
+namespace CompSorting
 {
     [Serializable]
     public class SerializedType
@@ -12,6 +12,12 @@ namespace CompSorting.Editor
         {
             AssemblyQualifiedName = type.AssemblyQualifiedName;
             Name = type.Name;
+        }
+
+        public SerializedType(string name, string assemblyQualifiedName)
+        {
+            AssemblyQualifiedName = assemblyQualifiedName;
+            Name = name;
         }
 
         public Type ConvertToType()

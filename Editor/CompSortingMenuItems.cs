@@ -1,7 +1,6 @@
-﻿
-using UnityEditor;
+﻿using UnityEditor;
 
-namespace CompSorting.Editor
+namespace CompSorting
 {
     public static class CompSortingMenuItems
     {
@@ -14,9 +13,9 @@ namespace CompSorting.Editor
             foreach (var selectedGameObject in selectedGameObjects)
             {
                 if (selectedGameObject == null)
-                    return;
+                    continue;
 
-                ComponentsSorter.ReOrderGameObject(selectedGameObject);
+                ComponentsSorter.OrganiseGameObject(selectedGameObject);
             }
         }
     }

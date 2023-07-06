@@ -1,81 +1,92 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-
+using CompSorting.Settings;
+using CompSorting.Utils;
 using RoboRyanTron.SearchableEnum.Editor;
-
 using UnityEditor;
-
 using UnityEngine;
 
-namespace CompSorting.Editor
+namespace CompSorting
 {
-    //https://answers.unity.com/questions/1549215/getting-all-component-types-even-those-not-on-the.html
-
     [CustomPropertyDrawer(typeof(SerializedType))]
     public class SerializedTypeDrawer : PropertyDrawer
     {
-        //private const float _height = ;
-
         /// <summary>
         /// Cache of the hash to use to resolve the ID for the drawer.
         /// </summary>
-        private int idHash;
+        private static readonly int _idHash = "SearchableEnumDrawer".GetHashCode();
 
-        public static List<string> options = new List<string>();
+        public static List<string> Options = new();
 
         public override float GetPropertyHeight(SerializedProperty prop, GUIContent label)
         {
             return EditorGUIUtility.singleLineHeight;
         }
 
-        private IEnumerable<Type> UnityComponentTypes()
+        static SerializedTypeDrawer()
         {
-            Assembly unityAssembly = Assembly.GetAssembly(typeof(Component));
-            return unityAssembly.GetTypes().Where(s => s.IsSubclassOf(typeof(Component)));
-        }
-
-        private IEnumerable<Type> AllComponentTypes()
-        {
-            return ComponentDatabase.GetAllTypes();
-        }
-
-        private List<string> MapOptions(IEnumerable<Type> types)
-        {
-            return types.Select(s => s.Name).ToList();
         }
 
         public override void OnGUI(Rect position, SerializedProperty prop, GUIContent label)
         {
-            var valueProp = prop.FindPropertyRelative(nameof(SerializedType.Name));
-            int selected = options.IndexOf(valueProp.stringValue);
+            var assemblyQualifiedName = prop.FindPropertyRelative(nameof(SerializedType.AssemblyQualifiedName));
+            var nameProp = prop.FindPropertyRelative(nameof(SerializedType.Name));
+
+            BaseSerializedTypeOptionsAttribute optionsAttribute = null;
+
+            var attributes = prop.GetAttributes<BaseSerializedTypeOptionsAttribute>(true);
+            if (attributes.Any())
+                optionsAttribute = attributes.First();
+
+            var serializedType = new SerializedType(nameProp.stringValue, assemblyQualifiedName.stringValue);
+
+            var options = optionsAttribute?.GetOptions(serializedType).ToList() ?? Options;
+
+            var componentName = nameProp.stringValue;
+
+            position.y += EditorGUIUtility.standardVerticalSpacing;
+            position.height = EditorGUIUtility.singleLineHeight;
+
+            int selected = options.IndexOf(componentName);
             int oldSelection = selected;
 
-            if (idHash == 0) idHash = "SearchableEnumDrawer".GetHashCode();
-            int id = GUIUtility.GetControlID(idHash, FocusType.Keyboard, position);
+            var buttonArea = new Rect(position);
 
+            int id = GUIUtility.GetControlID(_idHash, FocusType.Keyboard, buttonArea);
 
-            label = EditorGUI.BeginProperty(position, label, prop);
-            position = EditorGUI.PrefixLabel(position, id, label);
+            label = EditorGUI.BeginProperty(buttonArea, label, prop);
+            buttonArea = EditorGUI.PrefixLabel(buttonArea, id, label);
 
-            GUIContent buttonText;
             // If the enum has changed, a blank entry // Not in this case we don't! The option may no longer be available, so still show the text.
-            if (selected < 0 || options.Count <= selected)
+            if (selected < 0 || Options.Count <= selected)
             {
-                buttonText = new GUIContent(valueProp.stringValue);
+                componentName = nameProp.stringValue;
             }
             else
             {
-                buttonText = new GUIContent(options[selected]);
+                componentName = Options[selected];
             }
+            var type = ComponentDatabase.FindComponent(componentName);
 
-            if (DropdownButton(id, position, buttonText))
+            var buttonText = new GUIContent(componentName)
             {
-                SearchablePopup.Show(position, options.ToArray(), selected, i =>
+                image = AssetDatabaseUtil.GetAssetImage(componentName),
+                tooltip = assemblyQualifiedName.stringValue
+            };
+
+            if (DropdownButton(id, buttonArea, buttonText))
+            {
+                SearchablePopup.Show(buttonArea, options.ToArray(), selected, i =>
                                 {
                                     selected = i;
-                                    valueProp.stringValue = options[i];
+                                    var newComponentName = options[i];
+
+                                    nameProp.stringValue = newComponentName;
+
+                                    var typeNode = ComponentDatabase.FindComponent(newComponentName);
+                                    if (typeNode != null && typeNode.type != null)
+                                        assemblyQualifiedName.stringValue = typeNode.type.AssemblyQualifiedName;
+
                                     prop.serializedObject.ApplyModifiedProperties();
                                     CompSortingSettingsProvider.dirty = true;
                                 });

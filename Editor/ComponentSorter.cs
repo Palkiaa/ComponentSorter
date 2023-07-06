@@ -1,14 +1,9 @@
 ﻿using System.Linq;
-
-using CompSorting.Editor;
-
 using UnityEditor;
-
 using UnityEngine;
 
 namespace CompSorting
 {
-    //https://answers.unity.com/questions/31784/changing-the-order-of-components.html
     [InitializeOnLoad]
     public static class ComponentsSorter
     {
@@ -19,23 +14,21 @@ namespace CompSorting
 
         public static void OnSelectionChanged()
         {
-            if (Selection.activeGameObject != null && CompSortingRepository.GetEnabled())
-            {
-                ReOrderGameObject(Selection.activeGameObject);
-            }
+            if (Selection.activeGameObject == null || !CompSortingRepository.GetEnabled())
+                return;
+
+            OrganiseGameObject(Selection.activeGameObject);
         }
 
-        public static void ReOrderGameObject(GameObject gameObject)
+        public static void OrganiseGameObject(GameObject gameObject)
         {
-            var initialComponents = gameObject.GetComponents<Component>();
-            if (!initialComponents.Any())
-            {
+            var objectComponents = gameObject.GetComponents<Component>();
+            if (!objectComponents.Any())
                 return;
-            }
 
-            var sortedComponents = initialComponents.Where(Component => Component.GetType() != typeof(Transform)).ToList();
+            var sortedComponents = objectComponents.Where(Component => Component.GetType() != typeof(Transform)).ToList();
 
-            var settings = CompSortingRepository.GetTypes().ConvertTypeRepsToTypes().ToList();
+            var settings = CompSortingRepository.GetTypes().ConvertSerializedTypesToSystemTypes().ToList();
 
             sortedComponents.Sort(new ComponentComparer(settings));
 
@@ -45,14 +38,15 @@ namespace CompSorting
                 var components = gameObject.GetComponents<Component>()
                     .Where(Component => Component.GetType() != typeof(Transform)).ToList();
                 var currentIndex = components.IndexOf(sortedComponent);
+
                 if (currentIndex < i)
                 {
-                    for (var moveIndex = currentIndex; moveIndex < i; moveIndex++)
+                    for (; currentIndex < i; currentIndex++)
                         UnityEditorInternal.ComponentUtility.MoveComponentDown(sortedComponent);
                 }
                 else
                 {
-                    for (var MoveIndex = currentIndex; MoveIndex > i; MoveIndex--)
+                    for (; currentIndex > i; currentIndex--)
                         UnityEditorInternal.ComponentUtility.MoveComponentUp(sortedComponent);
                 }
             }

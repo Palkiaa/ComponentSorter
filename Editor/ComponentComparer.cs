@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using UnityEngine;
 
 namespace CompSorting
 {
     public class ComponentComparer : IComparer<Component>
     {
-        private readonly IEnumerable<Type> TypeOrder;
+        private readonly IEnumerable<Type> _typeOrder;
 
         public ComponentComparer(IEnumerable<Type> typeOrder)
         {
-            TypeOrder = typeOrder;
+            _typeOrder = typeOrder;
         }
 
         private int GetIndex(Component Component)
@@ -22,7 +21,7 @@ namespace CompSorting
             var bestIndex = int.MaxValue;
 
             var index = 0;
-            foreach (var type in TypeOrder)
+            foreach (var type in _typeOrder)
             {
                 // If we found the exact type in the list, then this is the right index.
                 if (componentType == type)

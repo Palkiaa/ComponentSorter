@@ -1,45 +1,40 @@
 ﻿using System.Collections.Generic;
-
 using UnityEditor;
-using UnityEditor.SettingsManagement;
 
 using UnitySettings = UnityEditor.SettingsManagement.Settings;
 
-namespace CompSorting.Editor
+namespace CompSorting
 {
     /// <summary>
     /// This class will act as a manager for the <see cref="Settings"/> singleton.
     /// </summary>
     public static class CompSortingRepository
     {
-        // Project settings will be stored in a JSON file in a directory matching this name.
-        private const string PackageName = "CompSorter";
-
         private static UnitySettings _instance;
 
-        public static UnitySettings Instance => _instance ??= new UnitySettings(PackageName);
+        public static UnitySettings Instance => _instance ??= new UnitySettings(PackageInfo.PackageName);
 
-        private const string EnabledKey = "Enabled";
-        private const string TypesKey = "Types";
+        private const string _enabledKey = "Enabled";
+        private const string _typesKey = "Types";
 
         public static bool GetEnabled()
         {
-            return Get(EnabledKey, false);
+            return Get(_enabledKey, false);
         }
 
         public static void SetEnabled(bool enabled)
         {
-            Set(EnabledKey, enabled);
+            Set(_enabledKey, enabled);
         }
 
         public static List<SerializedType> GetTypes()
         {
-            return Get(TypesKey, new List<SerializedType>());
+            return Get(_typesKey, new List<SerializedType>());
         }
 
         public static void SetTypes(List<SerializedType> types)
         {
-            Set(TypesKey, types);
+            Set(_typesKey, types);
         }
 
         #region GetSetStuff

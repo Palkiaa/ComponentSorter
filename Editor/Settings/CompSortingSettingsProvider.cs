@@ -1,30 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-
 using UnityEditor;
-
 using UnityEditorInternal;
-
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace CompSorting.Editor
+namespace CompSorting.Settings
 {
     public class CompSortingSettingsProvider : SettingsProvider
     {
-        private CompSortingSettings compSortingSettings;
-        private SerializedObject m_CustomSettings;
-        private ReorderableList reordableList;
+        private CompSortingSettings _compSortingSettings;
+        private SerializedObject _customSettings;
+        private ReorderableList _reorderableList;
 
-        private IEnumerable<Type> allTypes;
         public static bool dirty;
 
         private class Styles
         {
-            public static GUIContent types = new GUIContent("Component Types");
-            public static GUIContent enabled = new GUIContent("Enabled");
-            public static GUIContent reset = new GUIContent("Reset to defaults");
+            public static GUIContent types = new("Component Types");
+            public static GUIContent enabled = new("Enabled");
+            public static GUIContent reset = new("Reset to defaults");
         }
 
         public CompSortingSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null) : base(path, scopes, keywords)
@@ -33,13 +28,13 @@ namespace CompSorting.Editor
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            compSortingSettings = ScriptableObject.CreateInstance<CompSortingSettings>();
-            compSortingSettings.Enabled = CompSortingRepository.GetEnabled();
-            compSortingSettings.Types = CompSortingRepository.GetTypes();
+            _compSortingSettings = ScriptableObject.CreateInstance<CompSortingSettings>();
+            _compSortingSettings.Enabled = CompSortingRepository.GetEnabled();
+            _compSortingSettings.Types = CompSortingRepository.GetTypes();
 
-            m_CustomSettings = new SerializedObject(compSortingSettings);
+            _customSettings = new SerializedObject(_compSortingSettings);
 
-            reordableList = new ReorderableList(m_CustomSettings, m_CustomSettings.FindProperty(nameof(CompSortingSettings.Types)))
+            _reorderableList = new ReorderableList(_customSettings, _customSettings.FindProperty(nameof(CompSortingSettings.Types)))
             {
                 drawElementCallback = DrawListItems,
                 drawHeaderCallback = DrawHeader,
@@ -49,7 +44,7 @@ namespace CompSorting.Editor
 
         private void DrawListItems(Rect rect, int index, bool isActive, bool isFocused)
         {
-            SerializedProperty element = reordableList.serializedProperty.GetArrayElementAtIndex(index); //The element in the list
+            SerializedProperty element = _reorderableList.serializedProperty.GetArrayElementAtIndex(index); //The element in the list
 
             EditorGUI.PropertyField(rect, element, GUIContent.none);
         }
@@ -61,21 +56,25 @@ namespace CompSorting.Editor
 
         private void AddItem(ReorderableList reorderableList)
         {
-            reorderableList.serializedProperty.InsertArrayElementAtIndex(reordableList.count);
+            reorderableList.serializedProperty.InsertArrayElementAtIndex(_reorderableList.count);
 
-            var type = new SerializedType(allTypes.FirstOrDefault());
+            var type = CustomSerializedFieldOptionsAttribute.FirstUnselected();
+            if (type == null)
+                return;
 
-            var prop = reordableList.serializedProperty.GetArrayElementAtIndex(reordableList.count - 1);
+            var serializedType = new SerializedType(type);
 
-            prop.FindPropertyRelative(nameof(SerializedType.Name)).stringValue = type.Name;
-            prop.FindPropertyRelative(nameof(SerializedType.AssemblyQualifiedName)).stringValue = type.AssemblyQualifiedName;
+            var prop = _reorderableList.serializedProperty.GetArrayElementAtIndex(_reorderableList.count - 1);
+
+            prop.FindPropertyRelative(nameof(SerializedType.Name)).stringValue = serializedType.Name;
+            prop.FindPropertyRelative(nameof(SerializedType.AssemblyQualifiedName)).stringValue = serializedType.AssemblyQualifiedName;
         }
 
         public override void OnGUI(string searchContext)
         {
-            var obj = (CompSortingSettings)m_CustomSettings.targetObject;
+            var obj = (CompSortingSettings)_customSettings.targetObject;
 
-            m_CustomSettings.Update();
+            _customSettings.Update();
 
             if (GUILayout.Button(Styles.reset))
             {
@@ -85,23 +84,17 @@ namespace CompSorting.Editor
 
             EditorGUILayout.Space();
 
-            //text = EditorGUILayout.TextField(Styles.number, text);
-            allTypes = ComponentDatabase.GetAllTypes();
-            allTypes = allTypes.Where(s => !obj.Types.Any(t => t.Name == s.Name)).ToList();
-
-            SerializedTypeDrawer.options = allTypes.Select(s => s.Name).ToList();
-
             EditorGUI.BeginChangeCheck();
 
             obj.Enabled = EditorGUILayout.Toggle(Styles.enabled, obj.Enabled);
 
             EditorGUILayout.Space();
 
-            reordableList.DoLayoutList();
+            _reorderableList.DoLayoutList();
 
             if (EditorGUI.EndChangeCheck() || dirty)
             {
-                m_CustomSettings.ApplyModifiedProperties();
+                _customSettings.ApplyModifiedProperties();
 
                 CompSortingRepository.SetEnabled(obj.Enabled);
                 CompSortingRepository.SetTypes(obj.Types);
@@ -115,7 +108,7 @@ namespace CompSorting.Editor
         [SettingsProvider]
         public static SettingsProvider CreateSettingsProvider()
         {
-            var provider = new CompSortingSettingsProvider("Project/CompSorting", SettingsScope.Project)
+            var provider = new CompSortingSettingsProvider($"Project/{PackageInfo.DisplayName}", SettingsScope.Project)
             {
                 // Automatically extract all keywords from the Styles.
                 keywords = GetSearchKeywordsFromGUIContentProperties<Styles>()
