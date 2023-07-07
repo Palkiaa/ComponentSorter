@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using CompSorting.Settings;
+﻿using CompSorting.Settings;
 using CompSorting.Utils;
 using RoboRyanTron.SearchableEnum.Editor;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,7 +15,7 @@ namespace CompSorting
         /// </summary>
         private static readonly int _idHash = "SearchableEnumDrawer".GetHashCode();
 
-        public static List<string> Options = new();
+        private static SerializedType[] _defaultOptions = new SerializedType[0];
 
         public override float GetPropertyHeight(SerializedProperty prop, GUIContent label)
         {
@@ -40,59 +39,96 @@ namespace CompSorting
 
             var serializedType = new SerializedType(nameProp.stringValue, assemblyQualifiedName.stringValue);
 
-            var options = optionsAttribute?.GetOptions(serializedType).ToList() ?? Options;
-
-            var componentName = nameProp.stringValue;
+            var componentName = serializedType.Name;
 
             position.y += EditorGUIUtility.standardVerticalSpacing;
             position.height = EditorGUIUtility.singleLineHeight;
 
-            int selected = options.IndexOf(componentName);
-            int oldSelection = selected;
+            var buttonArea = new Rect(position)
+            {
+                width = position.width * 0.75f
+            };
 
-            var buttonArea = new Rect(position);
+            var imageStyle = new GUIStyle()
+            {
+                imagePosition = ImagePosition.ImageOnly,
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            var locateRect = new Rect(position)
+            {
+                x = buttonArea.x + buttonArea.width + EditorGUIUtility.standardVerticalSpacing,
+                width = position.height
+            };
+            var locateScript = new GUIContent(EditorGUIUtility.IconContent("d_pick"))
+            {
+                tooltip = "Go to file"
+            };
+
+            var infoRect = new Rect(locateRect)
+            {
+                x = locateRect.x + locateRect.width + EditorGUIUtility.standardVerticalSpacing,
+            };
+            var infoContent = new GUIContent(EditorGUIUtility.IconContent("d__Help"))
+            {
+                tooltip = serializedType.AssemblyQualifiedName
+            };
+
+            GUI.Label(infoRect, infoContent, imageStyle);
+
+            var assetPath = AssetDatabaseUtil.GetProjectAssetPath(serializedType);
+            GUI.enabled = !string.IsNullOrWhiteSpace(assetPath);
+
+            if (GUI.Button(locateRect, locateScript, imageStyle))
+            {
+                var @object = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
+                FocusProjectAsset(@object);
+            }
+            GUI.enabled = true;
 
             int id = GUIUtility.GetControlID(_idHash, FocusType.Keyboard, buttonArea);
 
             label = EditorGUI.BeginProperty(buttonArea, label, prop);
             buttonArea = EditorGUI.PrefixLabel(buttonArea, id, label);
 
-            // If the enum has changed, a blank entry // Not in this case we don't! The option may no longer be available, so still show the text.
-            if (selected < 0 || Options.Count <= selected)
-            {
-                componentName = nameProp.stringValue;
-            }
-            else
-            {
-                componentName = Options[selected];
-            }
-            var type = ComponentDatabase.FindComponent(componentName);
-
             var buttonText = new GUIContent(componentName)
             {
-                image = AssetDatabaseUtil.GetAssetImage(componentName),
-                tooltip = assemblyQualifiedName.stringValue
+                image = AssetDatabaseUtil.GetAssetImage(serializedType)
             };
 
             if (DropdownButton(id, buttonArea, buttonText))
             {
-                SearchablePopup.Show(buttonArea, options.ToArray(), selected, i =>
-                                {
-                                    selected = i;
-                                    var newComponentName = options[i];
+                var options = optionsAttribute?.GetOptions(serializedType) ?? _defaultOptions;
+                int selected = options.ToList().FindIndex(s => s == serializedType);
 
-                                    nameProp.stringValue = newComponentName;
+                SearchablePopup.Show(buttonArea, options, selected, i =>
+                {
+                    var newComponentName = options[i];
 
-                                    var typeNode = ComponentDatabase.FindComponent(newComponentName);
-                                    if (typeNode != null && typeNode.type != null)
-                                        assemblyQualifiedName.stringValue = typeNode.type.AssemblyQualifiedName;
+                    assemblyQualifiedName.stringValue = newComponentName.AssemblyQualifiedName;
+                    nameProp.stringValue = newComponentName.Name;
 
-                                    prop.serializedObject.ApplyModifiedProperties();
-                                    CompSortingSettingsProvider.dirty = true;
-                                });
+                    prop.serializedObject.ApplyModifiedProperties();
+                    CompSortingSettingsProvider.dirty = true;
+                });
             }
 
             EditorGUI.EndProperty();
+        }
+
+        private void FocusProjectAsset(Object @object)
+        {
+            var projectBrowserWindowType = typeof(Editor).Assembly.GetType("UnityEditor.ProjectBrowser");
+            if (projectBrowserWindowType != null)
+            {
+                var window = EditorWindow.GetWindow(projectBrowserWindowType);
+                if (window != null)
+                    window.Focus();
+            }
+            // Select the object in the project folder
+            //Selection.activeObject = @object;
+            // Also flash the folder yellow to highlight it
+            EditorGUIUtility.PingObject(@object);
         }
 
         /// <summary>

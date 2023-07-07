@@ -8,10 +8,10 @@ namespace CompSorting
         {
         }
 
-        public override string[] GetOptions(SerializedType serializedType)
+        public override SerializedType[] GetOptions(SerializedType serializedType)
         {
             var types = ComponentDatabase.GetAllTypes();
-            var options = types.Select(s => s.Name).ToArray();
+            var options = types.Select(s => new SerializedType(s)).ToArray();
             return options;
         }
     }

@@ -28,6 +28,18 @@ namespace CompSorting.Settings
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
+            CompSortingRepository.Instance.afterSettingsSaved += Instance_afterSettingsSaved;
+            Load();
+        }
+
+        public override void OnDeactivate()
+        {
+            if (CompSortingRepository.Instance != null)
+                CompSortingRepository.Instance.afterSettingsSaved -= Instance_afterSettingsSaved;
+        }
+
+        private void Load()
+        {
             _compSortingSettings = ScriptableObject.CreateInstance<CompSortingSettings>();
             _compSortingSettings.Enabled = CompSortingRepository.GetEnabled();
             _compSortingSettings.Types = CompSortingRepository.GetTypes();
@@ -40,6 +52,11 @@ namespace CompSorting.Settings
                 drawHeaderCallback = DrawHeader,
                 onAddCallback = AddItem
             };
+        }
+
+        private void Instance_afterSettingsSaved()
+        {
+            Load();
         }
 
         private void DrawListItems(Rect rect, int index, bool isActive, bool isFocused)

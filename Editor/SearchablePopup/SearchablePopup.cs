@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using CompSorting;
+using CompSorting.Utils;
 using UnityEditor;
 
 using UnityEngine;
@@ -45,10 +46,9 @@ namespace RoboRyanTron.SearchableEnum.Editor
         /// <param name="onSelectionMade">
         /// Callback to trigger when a choice is made.
         /// </param>
-        public static void Show(Rect activatorRect, string[] options, int current, Action<int> onSelectionMade)
+        public static void Show(Rect activatorRect, SerializedType[] options, int current, Action<int> onSelectionMade)
         {
-            SearchablePopup win =
-                new SearchablePopup(options, current, onSelectionMade);
+            SearchablePopup win = new(options, current, onSelectionMade);
             PopupWindow.Show(activatorRect, win);
         }
 
@@ -87,15 +87,15 @@ namespace RoboRyanTron.SearchableEnum.Editor
             public struct Entry
             {
                 public int Index;
-                public string Text;
+                public SerializedType Value;
             }
 
             /// <summary> All posibile items in the list. </summary>
-            private readonly string[] allItems;
+            private readonly SerializedType[] allItems;
 
             /// <summary> Create a new filtered list. </summary>
             /// <param name="items">All The items to filter.</param>
-            public FilteredList(string[] items)
+            public FilteredList(SerializedType[] items)
             {
                 allItems = items;
                 Entries = new List<Entry>();
@@ -131,14 +131,14 @@ namespace RoboRyanTron.SearchableEnum.Editor
 
                 for (int i = 0; i < allItems.Length; i++)
                 {
-                    if (string.IsNullOrEmpty(Filter) || allItems[i].ToLower().Contains(Filter.ToLower()))
+                    if (string.IsNullOrEmpty(Filter) || allItems[i].Name.ToLower().Contains(Filter.ToLower()))
                     {
                         Entry entry = new Entry
                         {
                             Index = i,
-                            Text = allItems[i]
+                            Value = allItems[i]
                         };
-                        if (string.Equals(allItems[i], Filter, StringComparison.CurrentCultureIgnoreCase))
+                        if (string.Equals(allItems[i].Name, Filter, StringComparison.CurrentCultureIgnoreCase))
                             Entries.Insert(0, entry);
                         else
                             Entries.Add(entry);
@@ -203,7 +203,7 @@ namespace RoboRyanTron.SearchableEnum.Editor
 
         #region -- Initialization ---------------------------------------------
 
-        private SearchablePopup(string[] names, int currentIndex, Action<int> onSelectionMade)
+        private SearchablePopup(SerializedType[] names, int currentIndex, Action<int> onSelectionMade)
         {
             list = new FilteredList(names);
             this.currentIndex = currentIndex;
@@ -211,7 +211,7 @@ namespace RoboRyanTron.SearchableEnum.Editor
 
             hoverIndex = currentIndex;
             scrollToIndex = currentIndex;
-            scrollOffset = GetWindowSize().y - ROW_HEIGHT * 2;
+            scrollOffset = GetWindowSize().y - (EditorStyles.toolbar.fixedHeight - 2) * 4;
         }
 
         #endregion -- Initialization ---------------------------------------------
@@ -338,8 +338,12 @@ namespace RoboRyanTron.SearchableEnum.Editor
             Rect labelRect = new Rect(rowRect);
             labelRect.xMin += ROW_INDENT;
 
-            var text = new GUIContent(list.Entries[i].Text);
-            text.image = AssetDatabaseUtil.GetAssetImage(text.text);
+            var serializedType = list.Entries[i].Value;
+
+            var text = new GUIContent(serializedType.Name)
+            {
+                image = AssetDatabaseUtil.GetAssetImage(serializedType)
+            };
             GUI.Label(labelRect, text);
         }
 

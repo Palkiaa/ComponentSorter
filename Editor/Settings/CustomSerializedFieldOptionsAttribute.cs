@@ -5,14 +5,24 @@ namespace CompSorting.Settings
 {
     internal class CustomSerializedFieldOptionsAttribute : BaseSerializedTypeOptionsAttribute
     {
-        public override string[] GetOptions(SerializedType serializedType)
+        public override SerializedType[] GetOptions(SerializedType serializedType)
         {
-            var currentTypes = CompSortingRepository.GetTypes();
+            var _currentTypes = CompSortingRepository.GetTypes();
 
             var allTypes = ComponentDatabase.GetAllTypes();
-            allTypes = allTypes.Where(s => !currentTypes.Any(t => t.Name == s.Name)).ToList();
 
-            return allTypes.Select(s => s.Name).ToArray();
+            return allTypes.Where(s =>
+            {
+                if (s == serializedType)
+                    return true;
+
+                if (_currentTypes.Any(t => t == s))
+                    return false;
+
+                return true;
+            })
+                .Select(s => new SerializedType(s))
+                .ToArray();
         }
 
         public static Type FirstUnselected()
@@ -20,7 +30,7 @@ namespace CompSorting.Settings
             var currentTypes = CompSortingRepository.GetTypes();
 
             var allTypes = ComponentDatabase.GetAllTypes();
-            var unselectedType = allTypes.Where(s => !currentTypes.Any(t => t.Name == s.Name)).FirstOrDefault();
+            var unselectedType = allTypes.Where(s => !currentTypes.Any(t => t.AssemblyQualifiedName == s.AssemblyQualifiedName)).FirstOrDefault();
 
             return unselectedType;
         }

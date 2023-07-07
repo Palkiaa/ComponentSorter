@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 
 using UnitySettings = UnityEditor.SettingsManagement.Settings;
 
-namespace CompSorting
+namespace CompSorting.Settings
 {
     /// <summary>
     /// This class will act as a manager for the <see cref="Settings"/> singleton.

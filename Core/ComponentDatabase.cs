@@ -68,8 +68,8 @@ namespace CompSorting
 
             foreach (var type in hashset)
             {
-                _dict.TryGetValue(type.Name, out TypeNode tn);
-                _dict[type.Name] = ConvertType(type, tn);
+                _dict.TryGetValue(type.AssemblyQualifiedName, out TypeNode tn);
+                _dict[type.AssemblyQualifiedName] = ConvertType(type, tn);
             }
 
             _types = new List<Type>(hashset.Count);
@@ -81,9 +81,9 @@ namespace CompSorting
             return new TypeNode { next = next, type = type };
         }
 
-        public static TypeNode FindComponent(string componentName)
+        public static TypeNode FindComponent(string assemblyQualifiedName)
         {
-            if (_dict.TryGetValue(componentName, out var tn))
+            if (_dict.TryGetValue(assemblyQualifiedName, out var tn))
                 return tn;
             return null;
         }

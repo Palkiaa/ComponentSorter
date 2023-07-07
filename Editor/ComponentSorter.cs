@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using CompSorting.Settings;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace CompSorting
             if (!objectComponents.Any())
                 return;
 
-            var sortedComponents = objectComponents.Where(Component => Component.GetType() != typeof(Transform)).ToList();
+            var sortedComponents = objectComponents.Where(component => component != null && component.GetType() != typeof(Transform)).ToList();
 
             var settings = CompSortingRepository.GetTypes().ConvertSerializedTypesToSystemTypes().ToList();
 
