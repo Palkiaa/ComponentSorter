@@ -40,6 +40,12 @@ namespace CompSorting.Utils
 
                 var key = script.GetClass().AssemblyQualifiedName;
 
+                if (_projectScriptPaths.ContainsKey(key))
+                {
+                    Debug.LogWarningFormat("Found duplicate value for '{0}'\r\n'{1}'\r\n'{2}'", key, AssetDatabase.GetAssetPath(script), _projectScriptPaths[key]);
+                    continue;
+                }
+
                 _projectTypes.Add(key);
                 _projectScriptPaths.Add(key, AssetDatabase.GetAssetPath(script));
             }
